@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Homepagina</title>
+    <link type="text/css" rel="stylesheet" href="{% static 'admin/css/index_style.css' %}">
+</head>
+<body>
+<div id="container">
+    <div id="containerHeader">
+        <h1>Mastermind</h1>
+        <p>Kaedin Schouten<br>kaedin.schouten@student.hu.nl<br>1779004</p>
+    </div>
+    <div id="containerGameOptions">
+        <div id="containerButtonPlayerVsAi" onclick="location.href = '{% url 'start_player_vs_ai' %}'">
+            <h3>Speler vs AI</h3>
+            <p class="underline_text">AI kiest een opstelling. Speler moet raden.</p>
+        </div>
+        
+        <div id="containerAiVsPlayer" onclick="location.href = '{% url 'start_ai_vs_player' %}'">
+            <h3>AI vs Speler</h3>
+            <p class="underline_text">Speler kiest een opstelling. AI moet raden</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

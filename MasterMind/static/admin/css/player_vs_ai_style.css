@@ -1,0 +1,158 @@
+* {
+    font-family: 'Open Sans', sans-serif;
+}
+
+body {
+    background-color: #003366;
+    color: white;
+}
+
+#containerGameDone {
+    color: #003366;
+    display: flex;
+    justify-content: center;
+    z-index: 999;
+}
+
+#containerGameDoneContent {
+    text-align: center;
+    background-color: white;
+    border-radius: 10px;
+    padding: 50px;
+    width: 30%;
+    position: absolute;
+    display: none;
+    z-index: 999;
+    pointer-events: all;
+}
+
+#containerHeader {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+#containerHeader h1 {
+    margin: 0;
+    padding: 0;
+}
+
+#containerBoard {
+    padding: 50px 100px 50px 100px;
+    height: 65vh;
+    overflow-y: scroll;
+}
+
+.containerRow {
+    display: grid;
+    grid: "containerLeft containerMiddle containerRight"1fr/
+    1fr 5fr 1fr;
+}
+
+.containerLeft {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.containerMiddle, div#containerAiCode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.leftSlot, .centreSlot, .pallet_colors, .ai_slot {
+    border: 2px white solid;
+    margin: 10px;
+    border-radius: 25%;
+}
+
+.ai_slot{
+    border: 2px #003366 solid;
+    margin: 10px;
+    border-radius: 25%;
+    width: 40px;
+    height: 40px;
+}
+
+.leftSlot {
+    width: 50px;
+    height: 50px;
+    flex: 1 0 34%;
+}
+
+.centreSlot {
+    width: 100px;
+    height: 100px;
+}
+
+div#containerPallet {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    align-items: center;
+    position: fixed;
+    bottom: 50px;
+}
+
+div#containerPalletColors {
+    /*width: 450px; !* Comment this out for all colors on row *!*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+
+}
+
+hr {
+    height: 2px;
+    background-color: white;
+    border: none;
+}
+
+.pallet_colors {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+}
+
+h2, #containerReadyForFeedback {
+    margin: 10px 0 10px 0;
+    padding: 0;
+}
+
+#containerReadyForFeedback {
+    padding: 0 30px 0 30px;
+    border: 2px white solid;
+    cursor: pointer;
+}
+
+#playAgain, #terugNaarBegin {
+    padding: 0 30px 0 30px;
+    border: 2px #003366 solid;
+    cursor: pointer;
+    margin: 20px 0 0 0;
+}
+
+#playAgain:hover, #terugNaarBegin:hover {
+    cursor: pointer;
+    background-color: #003366;
+    color: white;
+    transition: 0.8s;
+}
+
+#containerReadyForFeedback:hover {
+    background-color: white;
+    color: #003366;
+    transition: 0.8s;
+}
+
+#error_message {
+    font-size: smaller;
+    color: red;
+}
+
+#containerAiCode{
+    display: none;
+}

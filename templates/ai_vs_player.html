@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI vs Player</title>
+    <link href="{% static 'admin/css/ai_vs_player.css' %}" type="text/css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="containerGameDone" id="containerGameDone">
+    <div id="containerGameDoneContent">
+
+        <h4 id="gamestatus">{% autoescape off %}Hier iets over het spel!{% endautoescape %}</h4>
+        <div id="containerAiCode">
+            <div class="ai_slot" id="containerAiSlot1"></div>
+            <div class="ai_slot" id="containerAiSlot2"></div>
+            <div class="ai_slot" id="containerAiSlot3"></div>
+            <div class="ai_slot" id="containerAiSlot4"></div>
+        </div>
+        <div id="playAgain" onclick="location.href = '{% url 'start_ai_vs_player' %}'"><p>Speel opnieuw!</p></div>
+        <div id="terugNaarBegin" onclick="location.href = '{% url 'index' %}'"><p>Terug naar beginscherm</p></div>
+    </div>
+</div>
+<div id="containerGameScreen">
+    <div id="containerHeader">
+        <h1>MasterMind</h1>
+        <h2><u>AI vs Player</u></h2>
+        <h2><span id="round">Stel uw code in</span></h2>
+    </div>
+    <h2>Uw code:</h2>
+    <div id="containerChooseCode">
+        <div id="containerBoxes">
+            <div id="containerMainCodeSlot1"></div>
+            <div id="containerMainCodeSlot2"></div>
+            <div id="containerMainCodeSlot3"></div>
+            <div id="containerMainCodeSlot4"></div>
+        </div>
+    </div>
+    <h2>AI Code:</h2>
+    <div id="containerAiGuess">
+        <div id="containerAiGuessSlot1"></div>
+        <div id="containerAiGuessSlot2"></div>
+        <div id="containerAiGuessSlot3"></div>
+        <div id="containerAiGuessSlot4"></div>
+    </div>
+
+    <div id="containerPallet">
+        <p id="error_message"></p>
+        <h2>Focus is on block <span id="focus_block_text">1</span></h2>
+        <div id="containerPalletColors">
+            <div class="pallet_colors" id="pallet_blauw" style="background-color: blue"
+                 onclick="setPinColor('blue')"></div>
+            <div class="pallet_colors" id="pallet_geel" style="background-color: yellow"
+                 onclick="setPinColor('yellow')"></div>
+            <div class="pallet_colors" id="pallet_groen" style="background-color: green"
+                 onclick="setPinColor('green')"></div>
+            <div class="pallet_colors" id="pallet_rood" style="background-color: red"
+                 onclick="setPinColor('red')"></div>
+            <div class="pallet_colors" id="pallet_wit" style="background-color: white"
+                 onclick="setPinColor('white')"></div>
+            <div class="pallet_colors" id="pallet_zwart" style="background-color: black"
+                 onclick="setPinColor('black')"></div>
+        </div>
+        <div id="containerReadyForFeedback" onclick="checkCombination()">
+            <p>Start!</p>
+        </div>
+    </div>
+
+    <div id="containerFeedbackControls">
+        <div id="containerControls">
+            <div id="containerRCP">
+                <div class="control_tool" id="incrementRCP" onclick="alterCounter(0, 1)"><h1 class="noselect">+</h1>
+                </div>
+                <h1 class="noselect" id="rcp_counter">0</h1>
+                <div class="control_tool" id="decrementRCP" onclick="alterCounter(0, 0)"><h1 class="noselect">-</h1>
+                </div>
+            </div>
+            <div id="containerRCWP">
+                <div class="control_tool" id="incrementRCWP" onclick="alterCounter(1, 1)"><h1 class="noselect">+</h1>
+                </div>
+                <h1 class="noselect" id="rcwp_counter">0</h1>
+                <div class="control_tool" id="decrementRCWP" onclick="alterCounter(1, 0)"><h1 class="noselect">-</h1>
+                </div>
+            </div>
+
+        </div>
+        <p id="error_message_feedback"></p>
+        <div id="containerSubmitFeedback" onclick="submitFeedback()">
+            <p class="noselect">Submit Feedback!</p>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
+<script>
+
+    window.onbeforeunload = function () {
+        return "Data will be lost if you leave the page, are you sure?";
+    };
+
+    var colorless_block_focus = 1
+    var spancounter = 2
+    var round = 0
+
+    var colors = []
+
+    var calculated_rcp;
+    var calculated_rcwp;
+
+    function submitFeedback() {
+        var value_rcp = parseInt(document.getElementById('rcp_counter').innerHTML)
+        var value_rcwp = parseInt(document.getElementById('rcwp_counter').innerHTML)
+
+        if (value_rcp !== parseInt(calculated_rcp) || value_rcwp !== parseInt(calculated_rcwp)) {
+            document.getElementById('error_message_feedback').innerHTML = "Please double-check the value(s) in red"
+            if (value_rcp !== calculated_rcp) {
+                document.getElementById('rcp_counter').style.color = 'red'
+            }
+
+            if (value_rcwp !== calculated_rcwp) {
+                document.getElementById('rcwp_counter').style.color = 'red'
+            }
+            return
+        }
+
+        $.ajax({
+            url: "{% url 'submit_feedback' round=12345 colors=6789 %}".replace(/12345/, round).replace(/6789/, colors)
+        }).done(function (data) {
+            console.log(data)
+            if (data['isGameCompleted'] === false) {
+                updateRound(data['round'])
+                calculated_rcp = data['rcp']
+                calculated_rcwp = data['rcwp']
+                new_ai_code = data['new_ai_colors']
+
+                document.getElementById('rcp_counter').innerHTML = 0
+                document.getElementById('rcwp_counter').innerHTML = 0
+
+                updateNewAiCode(new_ai_code)
+            } else {
+                showGameDoneOptions(data['gamestatusText'])
+            }
+        });
+
+    }
+
+    function showGameDoneOptions(gamestatusText) {
+        document.getElementById("containerGameDoneContent").style.display = 'inline'
+        document.getElementById('containerGameScreen').style.opacity = '10%'
+        document.getElementById('containerReadyForFeedback').style.display = 'none'
+
+        document.getElementById('gamestatus').innerHTML = gamestatusText
+
+        $("#containerGameDoneContent").animate({
+            top: '35%',
+        }, "slow");
+
+    }
+
+    function updateNewAiCode(ai_code) {
+        for (let i = 0; i < ai_code.length; i++) {
+            document.getElementById('containerAiGuessSlot' + (i + 1)).style.backgroundColor = ai_code[i]
+        }
+    }
+
+    function setPinColor(color) {
+        document.getElementById('error_message').innerHTML = ''
+
+        var item = document.getElementById('containerMainCodeSlot' + colorless_block_focus)
+        item.style.backgroundColor = color
+
+        increment_colorless_block()
+    }
+
+    function alterCounter(item, mode) {
+        document.getElementById('error_message_feedback').innerHTML = ""
+        document.getElementById('rcp_counter').style.color = 'white'
+        document.getElementById('rcwp_counter').style.color = 'white'
+        var element = item === 0 ? document.getElementById('rcp_counter') : document.getElementById('rcwp_counter')
+        var value_rcp = parseInt(document.getElementById('rcp_counter').innerHTML)
+        var value_rcwp = parseInt(document.getElementById('rcwp_counter').innerHTML)
+        if (mode === 1) {
+            if ((value_rcwp + value_rcp) < 4) {
+                if (item === 1 && value_rcp < 3 || item === 0) {
+                    element.innerHTML = parseInt(element.innerHTML) + 1
+                }
+            }
+        } else if (mode === 0) {
+            if (item === 0 && value_rcp > 0 || item === 1 && value_rcwp > 0)
+                element.innerHTML = parseInt(element.innerHTML) - 1
+        }
+    }
+
+    function increment_colorless_block() {
+        if (colorless_block_focus > 3) {
+            colorless_block_focus = 1
+        } else {
+            colorless_block_focus += 1
+        }
+
+        updateSpanCounter()
+    }
+
+    function updateSpanCounter() {
+        if (spancounter > 4) {
+            spancounter = 1
+        }
+        document.getElementById('focus_block_text').innerHTML = spancounter
+        spancounter++;
+    }
+
+    function checkCombination() {
+        document.getElementById('error_message').innerHTML = ''
+        for (let i = 1; i < 5; i++) {
+            colors.push(document.getElementById('containerMainCodeSlot' + i).style.backgroundColor)
+        }
+
+        if (colors.includes('')) {
+            document.getElementById('error_message').innerHTML = 'Please fill in all boxes with colors'
+            return;
+        }
+
+        document.getElementById('containerPallet').style.display = 'none'
+
+        $.ajax({
+            url: "{% url 'submit_colors' ronde=123 colors=456 %}".replace(/123/, round).replace(/456/, colors),
+        }).done(function (data) {
+            updateRound(data['round'])
+            console.log(data)
+            document.getElementById('containerFeedbackControls').style.display = 'flex'
+            calculated_rcp = data['rcp']
+            calculated_rcwp = data['rcwp']
+
+            updateNewAiCode(data['ai_code'])
+
+        });
+    }
+
+    function updateRound(n_round) {
+        round = n_round
+        document.getElementById('round').innerHTML = "Ronde: " + round
+    }
+</script>

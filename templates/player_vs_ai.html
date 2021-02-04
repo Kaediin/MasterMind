@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MasterMind</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <link href="{% static 'admin/css/player_vs_ai_style.css' %}" rel="stylesheet" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="containerGameDone" id="containerGameDone">
+    <div id="containerGameDoneContent">
+
+        <h4 id="gamestatus">{% autoescape off %}Hier iets over het spel!{% endautoescape %}</h4>
+        <div id="containerAiCode">
+            <div class="ai_slot" id="containerAiSlot1"></div>
+            <div class="ai_slot" id="containerAiSlot2"></div>
+            <div class="ai_slot" id="containerAiSlot3"></div>
+            <div class="ai_slot" id="containerAiSlot4"></div>
+        </div>
+        <div id="playAgain" onclick="location.href = '{% url 'start_player_vs_ai' %}'"><p>Speel opnieuw!</p></div>
+        <div id="terugNaarBegin" onclick="location.href = '{% url 'index' %}'"><p>Terug naar beginscherm</p></div>
+    </div>
+</div>
+
+<div id="containerGameScreen">
+    <div id="containerBoard">
+        <div id="containerHeader">
+            <h1>MasterMind</h1>
+            <h2>Player vs AI</h2>
+            <h2>Ronde: <span id="round"></span></h2>
+        </div>
+        <div class="containerRow">
+            <div class="containerLeft">
+                <div class="leftSlot containerLeftSlot1_1"></div>
+                <div class="leftSlot containerLeftSlot2_1"></div>
+                <div class="leftSlot containerLeftSlot3_1"></div>
+                <div class="leftSlot containerLeftSlot4_1"></div>
+            </div>
+            <div class="containerMiddle">
+                <div class="centreSlot containerMiddleSlot1_1"></div>
+                <div class="centreSlot containerMiddleSlot2_1"></div>
+                <div class="centreSlot containerMiddleSlot3_1"></div>
+                <div class="centreSlot containerMiddleSlot4_1"></div>
+            </div>
+            <div class="containerRight"></div>
+        </div>
+        <hr>
+    </div>
+
+    <div id="containerPallet">
+        <p id="error_message"></p>
+        <h2>Focus is on block <span id="focus_block_text">1</span></h2>
+        <div id="containerPalletColors">
+            <div class="pallet_colors" id="pallet_blauw" style="background-color: blue"
+                 onclick="setPinColor('blue')"></div>
+            <div class="pallet_colors" id="pallet_geel" style="background-color: yellow"
+                 onclick="setPinColor('yellow')"></div>
+            <div class="pallet_colors" id="pallet_groen" style="background-color: green"
+                 onclick="setPinColor('green')"></div>
+            <div class="pallet_colors" id="pallet_rood" style="background-color: red"
+                 onclick="setPinColor('red')"></div>
+            <div class="pallet_colors" id="pallet_wit" style="background-color: white"
+                 onclick="setPinColor('white')"></div>
+            <div class="pallet_colors" id="pallet_zwart" style="background-color: black"
+                 onclick="setPinColor('black')"></div>
+        </div>
+        <div id="containerReadyForFeedback" onclick="checkCombination()">
+            <p>Check combination!</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script>
+
+    window.onbeforeunload = function () {
+        return "Data will be lost if you leave the page, are you sure?";
+    };
+
+    // TODO: Argumentatie
+    var clones = []
+    var colorless_block_focus = 1
+    var feedback_colorless_block_focus = 1
+    var spancounter = 2
+    var round = 0
+    var template_item = document.getElementsByClassName('containerRow')[0]
+    var node_template = template_item.cloneNode(true)
+
+    document.getElementsByClassName('containerRow')[0].style.display = 'none'
+
+    loadNewRow(node_template)
+
+    updateRoundCounter()
+
+    function setPinColor(color) {
+        document.getElementById('error_message').innerHTML = ''
+        var item = clones[clones.length - 1].childNodes[3].childNodes[colorless_block_focus]
+        item.style.backgroundColor = color
+
+        increment_colorless_block()
+    }
+
+    function increment_colorless_block() {
+        if (colorless_block_focus > 6) {
+            colorless_block_focus = 1
+        } else {
+            colorless_block_focus += 2
+        }
+
+        updateSpanCounter()
+    }
+
+    function updateSpanCounter() {
+        if (spancounter > 4) {
+            spancounter = 1
+        }
+        document.getElementById('focus_block_text').innerHTML = spancounter
+        spancounter++;
+    }
+
+    function increment_feedback_block() {
+        if (feedback_colorless_block_focus > 7) feedback_colorless_block_focus = 1
+        feedback_colorless_block_focus += 2
+    }
+
+    function checkCombination() {
+        document.getElementById('error_message').innerHTML = ''
+        var colors = []
+        colors.push(clones[clones.length - 1].childNodes[3].childNodes[1].style.backgroundColor)
+        colors.push(clones[clones.length - 1].childNodes[3].childNodes[3].style.backgroundColor)
+        colors.push(clones[clones.length - 1].childNodes[3].childNodes[5].style.backgroundColor)
+        colors.push(clones[clones.length - 1].childNodes[3].childNodes[7].style.backgroundColor)
+
+        if (colors.includes('')) {
+            document.getElementById('error_message').innerHTML = 'Please fill in all boxes with colors'
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'check_colors' ronde=6789 ai_comb=ai_combination colors=12345 %}".replace(/12345/, colors).replace(/6789/, round),
+        }).done(function (data) {
+            console.log(data)
+            if (data['isGameCompleted'] === false) {
+                feedback_colorless_block_focus = 1
+                updateRoundCounter()
+
+                setFeedbackColors(data['rcp'], data['rcwp'])
+
+                loadNewRow(clones[clones.length - 1].cloneNode(true))
+            } else {
+                showGameDoneOptions(data['gamestatusText'])
+                if (data['isWon'] === false) {
+                    document.getElementById('containerAiCode').style.display = 'flex'
+                    var ai_code = {{ ai_combination|safe }}
+                        console.log(ai_code)
+                    for (let i = 0; i < 4; i++) {
+                        console.log('Giving bgc: ' + ai_code[i])
+                        document.getElementById('containerAiSlot' + (i + 1)).style.backgroundColor = ai_code[i]
+                    }
+                } else {
+                    document.getElementById('containerAiCode').style.display = 'none'
+                }
+            }
+        });
+    }
+
+    function updateRoundCounter() {
+        round++;
+        document.getElementById('round').innerHTML = round
+    }
+
+    function setFeedbackColors(rcp, rcwp) {
+        for (let i = 0; i < rcp; i++) {
+            clones[clones.length - 1].childNodes[1].childNodes[feedback_colorless_block_focus].style.backgroundColor = 'white'
+            increment_feedback_block()
+        }
+
+        for (let i = 0; i < rcwp; i++) {
+            clones[clones.length - 1].childNodes[1].childNodes[feedback_colorless_block_focus].style.backgroundColor = 'red'
+            increment_feedback_block()
+        }
+    }
+
+    function showGameDoneOptions(gamestatusText) {
+        document.getElementById("containerGameDoneContent").style.display = 'inline'
+        document.getElementById('containerGameScreen').style.opacity = '10%'
+        document.getElementById('containerReadyForFeedback').style.display = 'none'
+
+        document.getElementById('gamestatus').innerHTML = gamestatusText
+
+        $("#containerGameDoneContent").animate({
+            top: '35%',
+        }, "slow");
+
+    }
+
+    function loadNewRow(node) {
+        node.style.display = ''
+        clones.push(node)
+
+        colorless_block_focus = 1
+        feedback_colorless_block_focus = 1
+        spancounter = 1
+
+        updateSpanCounter()
+
+        resetBackgroundColorsNewNode()
+
+        document.getElementById('containerBoard').appendChild(node)
+        document.getElementById('containerBoard').appendChild(document.createElement("hr"))
+    }
+
+    function resetBackgroundColorsNewNode() {
+        for (let i = 1; i < 8; i++) {
+            try {
+                clones[clones.length - 1].childNodes[1].childNodes[i].style.backgroundColor = ''
+                clones[clones.length - 1].childNodes[3].childNodes[i].style.backgroundColor = ''
+            } catch (e) {
+                console.log(e)
+            }
+            i++
+        }
+    }
+</script>

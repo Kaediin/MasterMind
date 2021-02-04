@@ -1,0 +1,39 @@
+* {
+    font-family: 'Open Sans', sans-serif;
+}
+
+body {
+    background-color: #003366;
+    color: white;
+}
+
+div#container{
+    width: 70%;
+    margin: auto;
+    padding: 150px 0;
+    text-align: center;
+    height: 100%;
+}
+
+div#containerGameOptions{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin: 100px 0;
+}
+
+#containerButtonPlayerVsAi, #containerAiVsPlayer{
+    border: 2px white solid;
+    border-radius: 10px;
+    padding: 0 20px;
+    width: 400px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+#containerButtonPlayerVsAi:hover, #containerAiVsPlayer:hover{
+    background-color: white;
+    color: #003366;
+    transition: 0.8s;
+}

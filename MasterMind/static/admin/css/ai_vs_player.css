@@ -1,0 +1,180 @@
+* {
+    font-family: 'Open Sans', sans-serif;
+}
+
+body {
+    background-color: #003366;
+    color: white;
+}
+
+#containerGameDone {
+    color: #003366;
+    display: flex;
+    justify-content: center;
+    z-index: 999;
+}
+
+#containerGameDoneContent {
+    text-align: center;
+    background-color: white;
+    border-radius: 10px;
+    padding: 50px;
+    width: 30%;
+    position: absolute;
+    display: none;
+    z-index: 999;
+    pointer-events: all;
+}
+
+#containerHeader {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+#containerHeader h1 {
+    margin: 0;
+    padding: 0;
+}
+
+#containerBoxes, #containerAiGuess {
+    display: flex;
+    justify-content: center;
+}
+
+#containerBoxes div, .pallet_colors, #containerAiGuess div {
+    width: 75px;
+    height: 75px;
+    margin: 10px;
+    border: 2px white solid;
+    border-radius: 25%;
+}
+
+div#containerPallet {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    align-items: center;
+    position: fixed;
+    bottom: 50px;
+}
+
+div#containerPalletColors {
+    /*width: 450px; !* Comment this out for all colors on row *!*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pallet_colors {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+}
+
+
+h2, #containerReadyForFeedback {
+    margin: 10px 0 10px 0;
+    padding: 0;
+}
+
+#containerReadyForFeedback {
+    padding: 0 30px 0 30px;
+    border: 2px white solid;
+    cursor: pointer;
+
+}
+
+#containerFeedbackControls{
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    position: fixed;
+    bottom: 50px;
+    display: none;
+}
+
+#containerControls{
+    text-align: center;
+    display: flex;
+    justify-content: space-evenly;
+    width: 20%;
+}
+
+.control_tool h1{
+    margin: 0;
+    padding: 0;
+}
+
+.control_tool{
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    border: 2px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.control_tool:hover{
+    background-color: white;
+    color: #003366;
+    transition: 0.8s;
+}
+
+.noselect {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+
+}
+
+#containerSubmitFeedback{
+    width: 300px;
+    margin: 10px 0;
+    text-align: center;
+    border: 2px solid white;
+    cursor: pointer;
+}
+
+#containerSubmitFeedback:hover{
+    background-color: white;
+    color: #003366;
+    transition: 0.8s;
+}
+
+#error_message_feedback{
+    padding: 0;
+    margin: 30px 0 20px 0;
+    color: red;
+    font-size: small;
+}
+
+#containerBoxes{
+    margin-bottom: 100px;
+}
+
+#containerGameScreen{
+    text-align: center;
+}
+
+#playAgain, #terugNaarBegin {
+    padding: 0 30px 0 30px;
+    border: 2px #003366 solid;
+    cursor: pointer;
+    margin: 20px 0 0 0;
+}
+
+#playAgain:hover, #terugNaarBegin:hover {
+    cursor: pointer;
+    background-color: #003366;
+    color: white;
+    transition: 0.8s;
+}
