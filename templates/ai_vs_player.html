@@ -29,7 +29,7 @@
             <h1>MasterMind</h1>
             <h2><u>AI vs Player</u></h2>
             <form id="alg_type">
-                <input type="radio" id="simple" name="radio_alg_type" value="simple" >
+                <input type="radio" id="simple" name="radio_alg_type" value="simple">
                 <label for="binary">Simple</label><br>
                 <input type="radio" id="worst-case" name="radio_alg_type" value="worst-case">
                 <label for="worst-case">Worst-case (Knuth)</label><br>
@@ -111,6 +111,7 @@
 </html>
 <script>
 
+    // Prevent user from closing window without warning
     window.onbeforeunload = function () {
         return "Data will be lost if you leave the page, are you sure?";
     };
@@ -148,9 +149,8 @@
                 }
             }
         }
-
         $.ajax({
-            url: "{% url 'submit_feedback' previous_code='abcd' rcp=78 rcwp=90 round=123 colors=456 alg_type='def' %}".replace('def', alg_type).replace(/123/, round).replace('abcd', new_ai_code).replace(/456/, colors).replace(/78/, calculated_rcp).replace(/90/, calculated_rcwp),
+            url: "{% url 'submit_feedback' previous_code='abcd' round=123 colors=456 alg_type='def' %}".replace('def', alg_type).replace(/123/, round).replace('abcd', new_ai_code).replace(/456/, colors),
         }).done(function (data) {
             console.log(data)
             if (data['isGameCompleted'] === false) {
@@ -237,6 +237,7 @@
 
     function checkCombination() {
         document.getElementById('error_message').innerHTML = ''
+        colors = []
         for (let i = 1; i < 5; i++) {
             colors.push(document.getElementById('containerMainCodeSlot' + i).style.backgroundColor)
         }
@@ -251,6 +252,7 @@
         $.ajax({
             url: "{% url 'submit_colors' ronde=123 colors=456 %}".replace(/123/, round).replace(/456/, colors),
         }).done(function (data) {
+            document.getElementById('alg_type').style.display = 'none'
             updateRound(data['round'])
             console.log(data)
             document.getElementById('containerFeedbackControls').style.display = 'flex'

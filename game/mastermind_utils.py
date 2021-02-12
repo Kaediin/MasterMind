@@ -95,9 +95,10 @@ def get_all_combinations():
 
 
 # Code for the simple strategy
-def get_simple_strategy(all_combinations, previous_code, previous_code_result):
+def get_simple_strategy(all_combinations, previous_code, user_code):
     # we return a random one from the list
-    accepted_codes = get_same_values_results(all_combinations, previous_code, previous_code_result)
+    results = get_response_from_code(user_code, previous_code)
+    accepted_codes = get_same_values_results(all_combinations, previous_code, results)
     return accepted_codes[random.randint(0, len(accepted_codes) - 1)]
 
 
