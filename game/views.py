@@ -43,12 +43,12 @@ def submit_colors(request, ronde, colors):
 
 
 def submit_feedback(request, round, colors, previous_code, rcp, rcwp, alg_type):
-    user_colors = tuple(str(colors).replace('&quot;', "'").split(','))
+    user_code = tuple(str(colors).replace('&quot;', "'").split(','))
     previous_code = tuple(previous_code.split(","))
 
     ai_code = None
     result = {'rcp': None, 'rcwp': None}
-    hasAiWon = previous_code == user_colors
+    hasAiWon = previous_code == user_code
     isGameCompleted = round == 8
     gamestatusText = ''
     if hasAiWon:
@@ -71,16 +71,24 @@ def submit_feedback(request, round, colors, previous_code, rcp, rcwp, alg_type):
                 if len(knuth_list) == 0 or round == 1:
                     raise KeyError
             except KeyError:
-                knuth_list = mastermind_utils.get_knuth_strategy(user_colors, previous_code)
+                knuth_list = mastermind_utils.get_knuth_strategy(user_code, previous_code)
 
             ai_code = knuth_list.pop(0)
             request.session['knuth_list'] = knuth_list
         else:
             print('Cliffhanger')
-            print('Do cliffhagner')
+            try:
+                codes = request.session['cliffhanger_codes']
+                if len(codes) == 0 or round == 1:
+                    raise KeyError
+            except KeyError:
+                codes = mastermind_utils.cliffhanger_strategy(user_code, previous_code)
+
+            ai_code = codes.pop(0)
+            request.session['cliffhanger_codes'] = codes
 
         print(f'Returning new code to temlate: {ai_code}')
-        result = mastermind_utils.get_response_from_code(user_colors, ai_code)
+        result = mastermind_utils.get_response_from_code(user_code, ai_code)
 
     context = {
         'round': int(round) + 1,

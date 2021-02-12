@@ -100,6 +100,7 @@ def get_simple_strategy(all_combinations, previous_code, previous_code_result):
     accepted_codes = get_same_values_results(all_combinations, previous_code, previous_code_result)
     return accepted_codes[random.randint(0, len(accepted_codes) - 1)]
 
+
 # get list filled with the same results as given
 def get_same_values_results(combinations, secondary_code, main_code_result, swap_comparisons=False):
     codes = []
@@ -118,6 +119,7 @@ def get_same_values_results(combinations, secondary_code, main_code_result, swap
             codes.append(code)
     # Now we have a list with all the unqiue combinations which give the same result as that my previous code got
     return codes
+
 
 # fill list with all results from code-comparison
 def fill_scores(all_combinations, logicalGuessesList, allValidScores, all_remaining_combinations, all_scores):
@@ -141,24 +143,29 @@ def fill_scores(all_combinations, logicalGuessesList, allValidScores, all_remain
 
     return all_scores
 
-# Worst case aka Knuth strategy
-def get_knuth_strategy(user_code, previous_guess):
-    # this is used to remove duplicates from final list later-on
-    original_guess = tuple(list(previous_guess).copy())
 
-    # create a list with only valid scores
+def get_valid_pin_scores():
     allScoresTemp = []
     for i in range(5):
         for j in range(0, 4 - i + 1):
             allScoresTemp.append((i, j))
-    allValidScores = allScoresTemp[:len(allScoresTemp) - 2] + allScoresTemp[len(allScoresTemp) - 1:]
+    return allScoresTemp[:len(allScoresTemp) - 2] + allScoresTemp[len(allScoresTemp) - 1:]
+
+
+# Worst case aka Knuth strategy
+def get_knuth_strategy(user_code, guess):
+    # this is used to remove duplicates from final list later-on
+    original_guess = tuple(list(guess).copy())
+
+    # create a list with only valid scores
+    allValidScores = get_valid_pin_scores()
 
     # Create a list of all logical guesses. We first add our previous guess
     # (in the first instance it is the initial guess aka AABB)
-    logicalGuessesList = [previous_guess]  # AABB
+    logicalGuessesList = [guess]  # AABB
 
     # Get results. RCP and RCWP from previous guess
-    result = get_response_from_code(user_code, previous_guess)
+    result = get_response_from_code(user_code, guess)
     rcp = result['rcp']
 
     # all the 1296 possible codes
@@ -168,36 +175,17 @@ def get_knuth_strategy(user_code, previous_guess):
     all_remaining_combinations = all_combinations.copy()
     # while we dont have the right answer
     while rcp != 4:
-
         # temp is filled with unique answers with the same results
-        same_results = get_same_values_results(all_remaining_combinations, previous_guess, result, swap_comparisons=True)
+        same_results = get_same_values_results(all_remaining_combinations, guess, result, swap_comparisons=True)
         all_remaining_combinations = same_results.copy()
         # all_scores is a list of scores for each guess in all_combinations
-        all_scores = fill_scores(all_combinations, logicalGuessesList, allValidScores, all_remaining_combinations, [] * len(all_combinations))
+        all_scores = fill_scores(all_combinations, logicalGuessesList, allValidScores, all_remaining_combinations,
+                                 [] * len(all_combinations))
 
+        guess = calculate_next_guess(all_scores, all_combinations, all_remaining_combinations)
 
-        # find all indices with the max score
-        # Get score which has the most occurrences
-        maxScore = max(all_scores)
-
-        # get index of max score, this will be used to slice list later on
-        indices = [i for i, x in enumerate(all_scores) if x == maxScore]
-
-        # if any guesses corresponds to the indices is in all_remaining_combinations,
-        # use that as the next guess
-        change = False
-        for i in range(len(indices)):
-            if all_combinations[indices[i]] in all_remaining_combinations:
-                previous_guess = all_combinations[indices[i]]
-                change = True
-                break
-
-        # else use the smallest guess as next guess
-        if change == False:
-            previous_guess = all_combinations[indices[0]]
-
-        logicalGuessesList.append(previous_guess)
-        result = get_response_from_code(user_code, previous_guess)
+        logicalGuessesList.append(guess)
+        result = get_response_from_code(user_code, guess)
         rcp = result['rcp']
 
     # remove original guess from list so we dont ask again
@@ -207,6 +195,30 @@ def get_knuth_strategy(user_code, previous_guess):
     # return the list shuffled
     random.shuffle(logicalGuessesList)
     return logicalGuessesList
+
+
+def calculate_next_guess(all_scores, all_combinations, all_remaining_combinations):
+    # find all indices with the max score
+    # Get score which has the most occurrences
+    maxScore = max(all_scores)
+
+    # get index of max score, this will be used to slice list later on
+    indices = [i for i, x in enumerate(all_scores) if x == maxScore]
+
+    # if any guesses corresponds to the indices is in all_remaining_combinations,
+    # use that as the next guess
+    change = False
+    for i in range(len(indices)):
+        if all_combinations[indices[i]] in all_remaining_combinations:
+            guess = all_combinations[indices[i]]
+            change = True
+            break
+
+    # else use the smallest guess as next guess
+    if change == False:
+        guess = all_combinations[indices[0]]
+
+    return guess
 
 
 # Retrieve an AABB style code
@@ -219,3 +231,44 @@ def get_random_logical_start():
     # Add another 2 colors
     code += [colors[random.randint(0, len(colors) - 1)]] * 2
     return code
+
+
+def cliffhanger_strategy(user_code, guess):
+    # save the original guess so we can remove it from the list later-on
+    org_guess = tuple(list(guess).copy())
+    # create a list with all the valid scores. (4,0), (2,2) and NOT (3, 1) etc.
+    valid_scores = get_valid_pin_scores()
+    # create a list with guesses
+    guesses = [guess]
+    # get result from current guess
+    result = get_response_from_code(user_code, guess)
+
+    rcp = result['rcp']
+    all_comb = get_all_combinations()
+    leftover_comb = all_comb.copy()
+
+    while rcp != 4:
+        # create a list with all the result from all the possible combinations
+        # where the result is the same as the previous one
+        same_scores = get_same_values_results(leftover_comb, guess, result, swap_comparisons=True)
+        leftover_comb = same_scores.copy()
+        # create a list with a count on how many scores are the same
+        scores = fill_scores(all_comb, guesses, valid_scores, leftover_comb, [] * len(all_comb))
+        # create a new guess based on these scores
+        guess = calculate_next_guess(scores, all_comb, leftover_comb)
+
+        # add and update values
+        guesses.append(guess)
+        result = get_response_from_code(user_code, guess)
+        rcp = result['rcp']
+
+    # get some results that kindoff fit in but dont have a score of (4, 0).
+    # It is VERY unlikely the score will be (4,0) on the ones added
+    res = get_response_from_code(get_random_pin_combination(), org_guess)
+    lookalikeresults = get_same_values_results(get_all_combinations(), org_guess, res)
+    while len(guesses) < 7:
+        # keep on added combinations to the list until is has 7 elements (1 is already used. That was AABB)
+        guesses.append(lookalikeresults.pop(0))
+    random.shuffle(guesses)
+    guesses.append(guesses.pop(guesses.index(list(user_code))))
+    return guesses
