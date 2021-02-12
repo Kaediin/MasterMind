@@ -101,6 +101,8 @@
                 <h1 class="noselect" id="rcp_counter">0</h1>
                 <div class="control_tool" id="decrementRCP" onclick="alterCounter(0, 0)"><h1 class="noselect">-</h1>
                 </div>
+                <p>Right colors <b>right</b> place</p><br>
+
             </div>
             <div id="containerRCWP">
                 <div class="control_tool" id="incrementRCWP" onclick="alterCounter(1, 1)"><h1 class="noselect">+</h1>
@@ -108,8 +110,9 @@
                 <h1 class="noselect" id="rcwp_counter">0</h1>
                 <div class="control_tool" id="decrementRCWP" onclick="alterCounter(1, 0)"><h1 class="noselect">-</h1>
                 </div>
-            </div>
+                <p>Right colors <b>wrong</b> place</p>
 
+            </div>
         </div>
         <p id="error_message_feedback"></p>
         <div id="containerSubmitFeedback" onclick="submitFeedback()">
@@ -316,6 +319,7 @@
 
         });
     }
+
     // update round counter
     function updateRound(n_round) {
         round = n_round
