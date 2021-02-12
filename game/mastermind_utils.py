@@ -146,12 +146,11 @@ def get_knuth_strategy(user_code, previous_guess):
         # TODO: Put this code block and the one from the simple alg into a funtion
         for code_all_combinations in all_remaining_combinations:
 
-            # get rcp and rcwp from the comparison between the previous_guess and the code_all_combinations
-            # result = get_response_from_code(previous_guess, code_all_combinations)
-            # if the rcp and rcwp match those of the initial guess aka AABB, we add them to the list
-            if int(rcp) == int(result['rcp']) and \
-                    int(rcwp) == int(result['rcwp']):
-                # if evaluation_inner(previous_guess, code_all_combinations) == (rcp, rcwp):
+            # Get rcp and rcwp from the comparison between the previous_guess and the code_all_combinations
+            score = get_response_from_code(previous_guess, code_all_combinations)
+            # If the rcp and rcwp match those of the initial guess aka AABB, we add them to the list
+            if int(rcp) == int(score['rcp']) and \
+                    int(rcwp) == int(score['rcwp']):
                 temp.append(code_all_combinations)
 
         # Copy list to all remaining comb.
