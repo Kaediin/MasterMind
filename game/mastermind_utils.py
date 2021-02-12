@@ -2,213 +2,222 @@ import math, random
 
 valid_colors = ['yellow', 'green', 'white', 'black', 'red', 'blue']
 
+
+# Return random pin combination (used only for the gamemode where the AI picks a color-combination
 def get_random_pin_combination():
     return [valid_colors[random.randint(0, len(valid_colors) - 1)] for e in range(4)]
 
 
+# Returns a dictionary with 2 elements. These are:
+#     - RCP: Right color and place (white pins). Also known as the 1 in (1, 0)
+#     - RCWP: Right color wrong place (red pins). Also known as the 0 in (1, 0)
+# These values are returned in a dictionary because this will be easier to translate to JSON and then to JavaScript
+# which happens a lot in DJango
 def get_response_from_code(main_list, submitted_list):
     result = validate_user_response(tuple(main_list), tuple(submitted_list))
     return result
 
 
-def validate_user_response(main_tuple, submitted_tuple, rcp=None, rcwp=None):
-    if rcp is not None and rcwp is not None:
-        if rcp == 4 and main_tuple != submitted_tuple:
-            return False, None
-        if rcp != 4 and main_tuple == submitted_tuple:
-            return False, None
-        if rcp == 3 and rcwp == 1:
-            return False, None
+def validate_user_response(main_tuple, submitted_tuple):
+    # Declare vars
+    counted_rcp = 0
+    counted_rcwp = 0
+    rcwp_main_list = list(main_tuple).copy()
+    rcwp_submitted_list = list(submitted_tuple).copy()
+    iterator_rcwp = 0
 
-    calculated_rcp = 0
-    calculated_rcwp = 0
-    rcwp_user_check_list = list(main_tuple).copy()
-    rcwp_ai_check_list = list(submitted_tuple).copy()
-
+    # This counts the RCP aka the Pins in the right place with the right color (white pins)
     for i in range(len(main_tuple)):
-        # print(f'{ai_code}\n{user_code}')
+        # get a pin from the given submitted combination with the same index
         ai_pin_rcp = submitted_tuple[i]
         user_pin = main_tuple[i]
-        # print(f'\nRCP: Checking if {ai_pin_rcp} == {user_pin} with index: {i}')
+        # now we can compare the 2 pins with eachother
         if ai_pin_rcp == user_pin:
-            # print(f'RCP: {rcwp_user_check_list} {rcwp_ai_check_list} Deleting index: {i-calculated_rcp}')
-            del rcwp_user_check_list[i - calculated_rcp]
-            del rcwp_ai_check_list[i - calculated_rcp]
-            calculated_rcp += 1
+            # if they math: update score and remove pins from list as we dont need these anymore
+            del rcwp_main_list[i - counted_rcp]
+            del rcwp_submitted_list[i - counted_rcp]
+            counted_rcp += 1
 
-    # print(f'\nList after RCP: {rcwp_user_check_list} {rcwp_ai_check_list}')
-    if rcp is not None and rcwp is not None:
-        if calculated_rcp != rcp:
-            # print(f'Calculated rcp = {calculated_rcp}, user rcp = {rcp}')
-            return None
+    # This counts the rcwp (red pins)
+    while iterator_rcwp != len(rcwp_main_list):
+        # get pin from list
+        submitted_pin_rcwp = rcwp_submitted_list[iterator_rcwp]
 
-    iterator_rcwp = 0
-    while iterator_rcwp != len(rcwp_user_check_list):
-        # print(f'User: {rcwp_user_check_list}')
-        # print(f'AI:   {rcwp_ai_check_list}')
-        ai_pin_rcwp = rcwp_ai_check_list[iterator_rcwp]
-        # print(f'Checking if {ai_pin_rcwp} is in {rcwp_user_check_list} with index {iterator_rcwp}')
-        if ai_pin_rcwp in rcwp_user_check_list:
-            del rcwp_ai_check_list[iterator_rcwp]
-            rcwp_user_check_list.remove(ai_pin_rcwp)
+        # Check if this pin is seen in the list with the correct pin-combination
+        if submitted_pin_rcwp in rcwp_main_list:
+            # Remove pin from list as we dont need to check this anymore
+            del rcwp_submitted_list[iterator_rcwp]
+            rcwp_main_list.remove(submitted_pin_rcwp)
+            # reset iterator and update counter
             iterator_rcwp = 0
-            calculated_rcwp += 1
+            counted_rcwp += 1
         else:
             iterator_rcwp += 1
 
-    # print(f'List after RCWP: {rcwp_user_check_list} {rcwp_ai_check_list}')
-    if rcp is not None and rcwp is not None:
-        if calculated_rcwp != rcwp:
-            # print(f'Calculated rcwp = {calculated_rcwp}, user rcwp = {rcwp}')
-            return None
-
+    # return results
     result = {
-        'rcp': calculated_rcp,
-        'rcwp': calculated_rcwp
+        'rcp': counted_rcp,
+        'rcwp': counted_rcwp
     }
 
     return result
 
 
 def get_all_combinations():
+    # create a combination (color set) with 4 placeholder colors
     color_set = [valid_colors[0]] * 4
+    # empty list to add all the color combinations to
     combinations = []
+    # Loop through all valid colors (6 in the standard case)
+    # (6^1)
     for i in range(len(valid_colors)):
+        # assign the fourth color to a new one
         color_set[3] = valid_colors[i]
+        # Loop again (6^2)
         for j in range(len(valid_colors)):
+            # assign the third color to a new one
             color_set[2] = valid_colors[j]
+            # loop again (6^3)
             for k in range(len(valid_colors)):
+                # Assign the second color to a new one
                 color_set[1] = valid_colors[k]
+                # Loop again (6^4) which equals = 1296 aka the max amount of unique combinations
                 for l in range(len(valid_colors)):
                     color_set[0] = valid_colors[l]
+                    # add color_set to list as atleast one value has been updated every iteration (obviously)
                     combinations.append(color_set.copy())
+
+    # I know this function could've been implemented a lot shorter (and more efficient)
+    # But I wanted to show how I filled the list with the unqiue values using 6 to the power of 4
+
+    # return the list sorted. This is also stated in the paper
     return sorted(combinations)
 
 
-def get_comb_simple_strategy(all_combinations, previous_code, previous_code_result):
+# Code for the simple strategy
+def get_simple_strategy(all_combinations, previous_code, previous_code_result):
     accepted_codes = []
     for code in all_combinations:
-        result = get_response_from_code(tuple(code), tuple(previous_code))
+        # get result (rcp and rcwp) from code in iteration of all_combinations
+        result = get_response_from_code(code, previous_code)
+        # if the results match, add them to the list
         if int(previous_code_result['rcp']) == int(result['rcp']) and \
                 int(previous_code_result['rcwp']) == int(result['rcwp']):
             accepted_codes.append(code)
+    # Now we have a list with all the unqiue combinations which give the same result as that my previous code got
+    # we return a random one from the list
+    return accepted_codes[random.randint(0, len(accepted_codes) - 1)]
 
-    return accepted_codes[random.randint(0, len(accepted_codes)-1)]
+# Worst case aka Knuth strategy
+def get_knuth_strategy(user_code, previous_guess):
+    # this is used to remove duplicates from final list lateron
+    original_guess = tuple(list(previous_guess).copy())
 
-def score(self, other):
-    first = len([speg for speg, opeg in zip(self, other) if speg == opeg])
-    return first, sum([min(self.count(j), other.count(j)) for j in valid_colors]) - first
+    # all the 1296 possible codes
+    all_combinations = get_all_combinations()
 
-def get_worst_case_strategy(all_combinations, user_code, previous_code, rcp, rcwp):
-    allAnswers = list(all_combinations).copy()
-    print(allAnswers)
-    bestGuess = False
-    bestScore = math.pow(6, 4)
-    for guess in allAnswers:
-        results = {}
-        for posAnswer in allAnswers:
-            # print(f'Pos: {posAnswer}')
-            # print(f'Guess: {guess}')
-            result = get_response_from_code(posAnswer, guess)
-            results[(result['rcp'], result['rcwp'])] = 1 + results[((result['rcp'], result['rcwp']), 0)]
-        score = max(results.values())
-        if score < bestScore:
-            bestGuess = guess
-            bestScore = score
-    return bestGuess
+    # the list contains all remaining possible solutions. This is copied instead for faster runtime
+    all_remaining_combinations = all_combinations.copy()
 
-    # allAnswers = list(all_combinations).copy()
-    # print(allAnswers)
-    # worstGuess = False
-    # worstScore = 0
-    # worstResults = {}
-    # for guess in allAnswers:
-    #     results = {}
-    #     for posAnswer in allAnswers:
-    #         # print(f'Pos: {posAnswer}')
-    #         # print(f'Guess: {guess}')
-    #         val, res = get_response_from_code(posAnswer, guess, isUser=False)
-    #         results[(res['rcp'], res['rcwp'])] = 1 + results.get((res['rcp'], res['rcwp']), 0)
-    #     score = max(results.values())
-    #     if score > worstScore:
-    #         worstGuess = guess
-    #         worstScore = score
-    #         worstResults = results
-    # return (worstGuess, lambda: len(allAnswers))
+    # allScoresTemp is created because (3,1) is not allowed and thus is used for slicing later
+    allScoresTemp = []
+    for i in range(5):
+        for j in range(0, 4 - i + 1):
+            allScoresTemp.append((i, j))
+    allValidScores = allScoresTemp[:len(allScoresTemp) - 2] + allScoresTemp[len(allScoresTemp) - 1:]
 
-    # S = all_combinations.copy()
-    #
-    # allstemp = []
-    # for i in range(5):
-    #     for j in range(0, 4-i+1):
-    #         allstemp.append((i, j))
-    # allScore = allstemp[:len(allstemp)-2]+allstemp[len(allstemp)-1:]
-    #
-    # guessList = [previous_code]
-    # rcp, rcwp = rcp, rcwp
-    # while(rcp, rcwp) != (4, 0):
-    #     temp = []
-    #     cScore = []*len(all_combinations)
-    #
-    #     for code in S:
-    #         validated, result = get_response_from_code(tuple(user_code), tuple(code), isUser=False)
-    #         if int(rcp) == int(result['rcp']) and \
-    #                 int(rcwp) == int(result['rcwp']):
-    #             temp.append(code)
-    #
-    #     S = temp[:]
-    #
-    #     for code in all_combinations:
-    #         if code not in guessList:
-    #             hitCount = [0]*len(allScore)
-    #             for s in S:
-    #                 validated, result = get_response_from_code(tuple(user_code), tuple(code), isUser=False)
-    #                 hitCount[allScore.index((result['rcp'], result['rcwp']))] += 1
-    #             cScore.append(len(S)-max(hitCount))
-    #         else:
-    #             cScore.append(0)
-    #
-    #     maxScore = max(cScore)
-    #
-    #     indices = [i for i, x in enumerate(cScore) if x == maxScore]
-    #     change = False
-    #
-    #     for i in range(len(indices)):
-    #         if all_combinations[indices[i]] in S:
-    #             guess = all_combinations[i]
-    #             change = True
-    #             break
-    #     if change == False:
-    #         guess = all_combinations[indices[0]]
-    #     guessList.append(guess)
-    #     validated, result = get_response_from_code(tuple(user_code), tuple(guess), isUser=False)
-    #     rcp, rcwp = result['rcp'], result['rcwp']
-    #
-    # return guessList
-    # results = [(right, wrong) for right in range(5) for wrong in range(5 - right) if not (right == 3 and wrong == 1)]
-    # if len(all_combinations) == 1:
-    #     ai_code = all_combinations.pop()
-    # else:
-    #     ai_code = max(get_all_combinations(), key=lambda x: min(sum(1 for p in all_combinations if score(p, x) != res) for res in results))
-    #
-    # sc = score(user_code, ai_code)
-    #
-    # set(all_combinations).difference_update(set(p for p in all_combinations if score(p, ai_code) != sc))
-    #
-    # return ai_code, all_combinations
+    # Create a list of all logical guesses. We first add our previous guess
+    # (in the first instance it is the initial guess aka AABB)
+    logicalGuessesList = [previous_guess]  # AABB
 
-def get_safe_input_int(question, exception_text):
-    answer = None
-    while answer is None:
-        try:
-            answer = int(input(question))
-            return answer
-        except ValueError:
-            print(exception_text)
+    # Get results. RCP and RCWP from previous guess
+    result = get_response_from_code(user_code, previous_guess)
+    rcp = result['rcp']
+    rcwp = result['rcwp']
 
+    # while the guess is not the code, keep guessing
+    while (rcp, rcwp) != (4, 0):
+
+        # temp is the list after removing all the conflicting guesses in all_remaining_combinations
+        temp = []
+        # all_scores is a list of scores for each guess in all_combinations
+        all_scores = [] * len(all_combinations)
+
+        # TODO: Put this code block and the one from the simple alg into a funtion
+        for code_all_combinations in all_remaining_combinations:
+
+            # get rcp and rcwp from the comparison between the previous_guess and the code_all_combinations
+            # result = get_response_from_code(previous_guess, code_all_combinations)
+            # if the rcp and rcwp match those of the initial guess aka AABB, we add them to the list
+            if int(rcp) == int(result['rcp']) and \
+                    int(rcwp) == int(result['rcwp']):
+                # if evaluation_inner(previous_guess, code_all_combinations) == (rcp, rcwp):
+                temp.append(code_all_combinations)
+
+        # Copy list to all remaining comb.
+        # Now we have a list with all codes with the same score as the initial guess had to the correct code
+        all_remaining_combinations = temp[:]
+
+
+        for code_all_combinations in all_combinations:
+            if code_all_combinations not in logicalGuessesList:
+
+                # Keeps track the count of certain rcp and rcwp combinations
+                counter = [0] * len(allValidScores)
+
+                # for all guesses in all_remaining_combinations,
+                # get its result if the unused guess is in the all_combinations list
+                # Increase the counter by 1 on the position of its values.
+                for code_remaining_combinations in all_remaining_combinations:
+                    inner_result = get_response_from_code(code_remaining_combinations, code_all_combinations)
+                    counter[allValidScores.index((int(inner_result['rcp']), int(inner_result['rcwp'])))] += 1
+                # calculate the score for the current unused guess
+                # fill list with all scores and the count of them
+                all_scores.append(len(all_remaining_combinations) - max(counter))
+            else:
+                all_scores.append(0)
+
+        # find all indices with the max score
+        # Get score which has the most occurrences
+        maxScore = max(all_scores)
+
+        # get index of max score, this will be used to slice list later on
+        indices = [i for i, x in enumerate(all_scores) if x == maxScore]
+
+        # if any guesses corresponds to the indices is in all_remaining_combinations,
+        # use that as the next guess
+        change = False
+        for i in range(len(indices)):
+            if all_combinations[indices[i]] in all_remaining_combinations:
+                previous_guess = all_combinations[indices[i]]
+                change = True
+                break
+
+        # else use the smallest guess as next guess
+        if change == False:
+            previous_guess = all_combinations[indices[0]]
+
+        logicalGuessesList.append(previous_guess)
+        result = get_response_from_code(user_code, previous_guess)
+        rcp = result['rcp']
+        rcwp = result['rcwp']
+
+    # remove original guess from list so we dont ask again
+    if original_guess in logicalGuessesList:
+        logicalGuessesList.remove(original_guess)
+
+    # return the list shuffled
+    random.shuffle(logicalGuessesList)
+    return logicalGuessesList
+
+
+# Retrieve an AABB style code
 def get_random_logical_start():
     colors = (valid_colors.copy())
+    # Add 2 random colors from the validcolors list
     code = [colors[random.randint(0, len(colors) - 1)]] * 2
+    # remove the previously added color (this prevents duplicates)
     colors.remove(code[0])
+    # Add another 2 colors
     code += [colors[random.randint(0, len(colors) - 1)]] * 2
     return code

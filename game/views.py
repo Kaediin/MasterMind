@@ -44,11 +44,11 @@ def submit_colors(request, ronde, colors):
 
 def submit_feedback(request, round, colors, previous_code, rcp, rcwp, alg_type):
     user_colors = tuple(str(colors).replace('&quot;', "'").split(','))
-    previous_colors = tuple(str(previous_code).replace('&quot;', "'").split(','))
-    # new_ai_code = mastermind_utils.get_random_pin_combination()
+    previous_code = tuple(previous_code.split(","))
+
     ai_code = None
     result = {'rcp': None, 'rcwp': None}
-    hasAiWon = tuple(previous_colors) == tuple(user_colors)
+    hasAiWon = previous_code == user_colors
     isGameCompleted = round == 8
     gamestatusText = ''
     if hasAiWon:
@@ -58,17 +58,26 @@ def submit_feedback(request, round, colors, previous_code, rcp, rcwp, alg_type):
         gamestatusText = 'Gefeliciteerd!<br>De AI kon u niet verslaan!'
     elif not isGameCompleted:
         if alg_type == 'simple':
-            ai_code = mastermind_utils.get_comb_simple_strategy(request.session['all_combinations'],
-                                                                tuple(previous_colors), {'rcp': rcp, 'rcwp': rcwp})
+            ai_code = mastermind_utils.get_simple_strategy(request.session['all_combinations'],
+                                                           previous_code, {'rcp': rcp, 'rcwp': rcwp})
             new_all_comb = request.session['all_combinations']
             new_all_comb.remove(ai_code)
             request.session['all_combinations'] = new_all_comb
         elif alg_type == 'worst-case':
-            ai_code = mastermind_utils.get_worst_case_strategy(mastermind_utils.get_all_combinations(), user_colors,
-                                                           previous_code, rcp, rcwp)
+            try:
+                knuth_list = request.session['knuth_list']
+                if len(knuth_list) == 0:
+                    raise KeyError
+            except KeyError:
+                knuth_list = mastermind_utils.get_knuth_strategy(user_colors, previous_code)
+
+            ai_code = knuth_list.pop(0)
+            request.session['knuth_list'] = knuth_list
+
         else:
             print('Do cliffhagner')
-        print(f'AI new: {ai_code}')
+
+        print(f'Returning new code to temlate: {ai_code}')
 
         result = mastermind_utils.get_response_from_code(user_colors, ai_code)
 
