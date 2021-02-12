@@ -58,7 +58,7 @@ div#containerPallet {
     width: 100%;
     align-items: center;
     position: fixed;
-    bottom: 50px;
+    bottom: 10px;
 }
 
 div#containerPalletColors {
@@ -94,7 +94,7 @@ h2, #containerReadyForFeedback {
     align-items: center;
     width: 100%;
     position: fixed;
-    bottom: 50px;
+    bottom: 10px;
     display: none;
 }
 
@@ -157,10 +157,6 @@ h2, #containerReadyForFeedback {
     font-size: small;
 }
 
-#containerBoxes{
-    margin-bottom: 100px;
-}
-
 #containerGameScreen{
     text-align: center;
 }
@@ -177,4 +173,10 @@ h2, #containerReadyForFeedback {
     background-color: #003366;
     color: white;
     transition: 0.8s;
+}
+
+div#containerTopRow{
+    display: flex;
+    justify-content: space-evenly;
+    padding: 10px 0;
 }
