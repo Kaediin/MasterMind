@@ -1,4 +1,4 @@
-import math, random
+import random
 
 valid_colors = ['yellow', 'green', 'white', 'black', 'red', 'blue']
 
@@ -96,30 +96,57 @@ def get_all_combinations():
 
 # Code for the simple strategy
 def get_simple_strategy(all_combinations, previous_code, previous_code_result):
-    accepted_codes = []
-    for code in all_combinations:
-        # get result (rcp and rcwp) from code in iteration of all_combinations
-        result = get_response_from_code(code, previous_code)
-        # if the results match, add them to the list
-        if int(previous_code_result['rcp']) == int(result['rcp']) and \
-                int(previous_code_result['rcwp']) == int(result['rcwp']):
-            accepted_codes.append(code)
-    # Now we have a list with all the unqiue combinations which give the same result as that my previous code got
     # we return a random one from the list
+    accepted_codes = get_same_values_results(all_combinations, previous_code, previous_code_result)
     return accepted_codes[random.randint(0, len(accepted_codes) - 1)]
+
+# get list filled with the same results as given
+def get_same_values_results(combinations, secondary_code, main_code_result, swap_comparisons=False):
+    codes = []
+    main_rcp = int(main_code_result['rcp'])
+    main_rcwp = int(main_code_result['rcwp'])
+    for code in combinations:
+        # get result (rcp and rcwp) from code in iteration of all_combinations
+        if swap_comparisons:
+            result = get_response_from_code(secondary_code, code)
+        else:
+            result = get_response_from_code(code, secondary_code)
+        rcp = int(result['rcp'])
+        rcwp = int(result['rcwp'])
+        # if the results match, add them to the list
+        if rcp == main_rcp and rcwp == main_rcwp:
+            codes.append(code)
+    # Now we have a list with all the unqiue combinations which give the same result as that my previous code got
+    return codes
+
+# fill list with all results from code-comparison
+def fill_scores(all_combinations, logicalGuessesList, allValidScores, all_remaining_combinations, all_scores):
+    for code_all_combinations in all_combinations:
+        if code_all_combinations not in logicalGuessesList:
+
+            # Keeps track the count of certain rcp and rcwp combinations
+            counter = [0] * len(allValidScores)
+
+            # for all guesses in all_remaining_combinations,
+            # get its result if the unused guess is in the all_combinations list
+            # Increase the counter by 1 on the position of its values.
+            for code_remaining_combinations in all_remaining_combinations:
+                inner_result = get_response_from_code(code_remaining_combinations, code_all_combinations)
+                counter[allValidScores.index((int(inner_result['rcp']), int(inner_result['rcwp'])))] += 1
+            # calculate the score for the current unused guess
+            # fill list with all scores and the count of them
+            all_scores.append(len(all_remaining_combinations) - max(counter))
+        else:
+            all_scores.append(0)
+
+    return all_scores
 
 # Worst case aka Knuth strategy
 def get_knuth_strategy(user_code, previous_guess):
-    # this is used to remove duplicates from final list lateron
+    # this is used to remove duplicates from final list later-on
     original_guess = tuple(list(previous_guess).copy())
 
-    # all the 1296 possible codes
-    all_combinations = get_all_combinations()
-
-    # the list contains all remaining possible solutions. This is copied instead for faster runtime
-    all_remaining_combinations = all_combinations.copy()
-
-    # allScoresTemp is created because (3,1) is not allowed and thus is used for slicing later
+    # create a list with only valid scores
     allScoresTemp = []
     for i in range(5):
         for j in range(0, 4 - i + 1):
@@ -133,48 +160,21 @@ def get_knuth_strategy(user_code, previous_guess):
     # Get results. RCP and RCWP from previous guess
     result = get_response_from_code(user_code, previous_guess)
     rcp = result['rcp']
-    rcwp = result['rcwp']
 
-    # while the guess is not the code, keep guessing
-    while (rcp, rcwp) != (4, 0):
+    # all the 1296 possible codes
+    all_combinations = get_all_combinations()
 
-        # temp is the list after removing all the conflicting guesses in all_remaining_combinations
-        temp = []
+    # the list contains all remaining possible solutions. This is copied instead for faster runtime
+    all_remaining_combinations = all_combinations.copy()
+    # while we dont have the right answer
+    while rcp != 4:
+
+        # temp is filled with unique answers with the same results
+        same_results = get_same_values_results(all_remaining_combinations, previous_guess, result, swap_comparisons=True)
+        all_remaining_combinations = same_results.copy()
         # all_scores is a list of scores for each guess in all_combinations
-        all_scores = [] * len(all_combinations)
+        all_scores = fill_scores(all_combinations, logicalGuessesList, allValidScores, all_remaining_combinations, [] * len(all_combinations))
 
-        # TODO: Put this code block and the one from the simple alg into a funtion
-        for code_all_combinations in all_remaining_combinations:
-
-            # Get rcp and rcwp from the comparison between the previous_guess and the code_all_combinations
-            score = get_response_from_code(previous_guess, code_all_combinations)
-            # If the rcp and rcwp match those of the initial guess aka AABB, we add them to the list
-            if int(rcp) == int(score['rcp']) and \
-                    int(rcwp) == int(score['rcwp']):
-                temp.append(code_all_combinations)
-
-        # Copy list to all remaining comb.
-        # Now we have a list with all codes with the same score as the initial guess had to the correct code
-        all_remaining_combinations = temp[:]
-
-
-        for code_all_combinations in all_combinations:
-            if code_all_combinations not in logicalGuessesList:
-
-                # Keeps track the count of certain rcp and rcwp combinations
-                counter = [0] * len(allValidScores)
-
-                # for all guesses in all_remaining_combinations,
-                # get its result if the unused guess is in the all_combinations list
-                # Increase the counter by 1 on the position of its values.
-                for code_remaining_combinations in all_remaining_combinations:
-                    inner_result = get_response_from_code(code_remaining_combinations, code_all_combinations)
-                    counter[allValidScores.index((int(inner_result['rcp']), int(inner_result['rcwp'])))] += 1
-                # calculate the score for the current unused guess
-                # fill list with all scores and the count of them
-                all_scores.append(len(all_remaining_combinations) - max(counter))
-            else:
-                all_scores.append(0)
 
         # find all indices with the max score
         # Get score which has the most occurrences
@@ -199,7 +199,6 @@ def get_knuth_strategy(user_code, previous_guess):
         logicalGuessesList.append(previous_guess)
         result = get_response_from_code(user_code, previous_guess)
         rcp = result['rcp']
-        rcwp = result['rcwp']
 
     # remove original guess from list so we dont ask again
     if original_guess in logicalGuessesList:

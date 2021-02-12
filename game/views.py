@@ -58,27 +58,28 @@ def submit_feedback(request, round, colors, previous_code, rcp, rcwp, alg_type):
         gamestatusText = 'Gefeliciteerd!<br>De AI kon u niet verslaan!'
     elif not isGameCompleted:
         if alg_type == 'simple':
+            print('Simple')
             ai_code = mastermind_utils.get_simple_strategy(request.session['all_combinations'],
                                                            previous_code, {'rcp': rcp, 'rcwp': rcwp})
             new_all_comb = request.session['all_combinations']
             new_all_comb.remove(ai_code)
             request.session['all_combinations'] = new_all_comb
         elif alg_type == 'worst-case':
+            print('Worst-case')
             try:
                 knuth_list = request.session['knuth_list']
-                if len(knuth_list) == 0:
+                if len(knuth_list) == 0 or round == 1:
                     raise KeyError
             except KeyError:
                 knuth_list = mastermind_utils.get_knuth_strategy(user_colors, previous_code)
 
             ai_code = knuth_list.pop(0)
             request.session['knuth_list'] = knuth_list
-
         else:
+            print('Cliffhanger')
             print('Do cliffhagner')
 
         print(f'Returning new code to temlate: {ai_code}')
-
         result = mastermind_utils.get_response_from_code(user_colors, ai_code)
 
     context = {
