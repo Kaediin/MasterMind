@@ -76,11 +76,12 @@
 </html>
 <script>
 
+    // prevent reloading page without message
     window.onbeforeunload = function () {
         return "Data will be lost if you leave the page, are you sure?";
     };
 
-    // TODO: Argumentatie
+    // init vars
     var clones = []
     var colorless_block_focus = 1
     var feedback_colorless_block_focus = 1
@@ -89,12 +90,15 @@
     var template_item = document.getElementsByClassName('containerRow')[0]
     var node_template = template_item.cloneNode(true)
 
+    // hide first row
     document.getElementsByClassName('containerRow')[0].style.display = 'none'
 
+    // load new row with the template
     loadNewRow(node_template)
 
     updateRoundCounter()
 
+    {#set block color when pallet color is clicked#}
     function setPinColor(color) {
         document.getElementById('error_message').innerHTML = ''
         var item = clones[clones.length - 1].childNodes[3].childNodes[colorless_block_focus]
@@ -109,7 +113,7 @@
         } else {
             colorless_block_focus += 2
         }
-
+        // update counter
         updateSpanCounter()
     }
 
@@ -126,32 +130,39 @@
         feedback_colorless_block_focus += 2
     }
 
+    // Check the combination
     function checkCombination() {
+        // reset error message
         document.getElementById('error_message').innerHTML = ''
+        // gather colors
         var colors = []
         colors.push(clones[clones.length - 1].childNodes[3].childNodes[1].style.backgroundColor)
         colors.push(clones[clones.length - 1].childNodes[3].childNodes[3].style.backgroundColor)
         colors.push(clones[clones.length - 1].childNodes[3].childNodes[5].style.backgroundColor)
         colors.push(clones[clones.length - 1].childNodes[3].childNodes[7].style.backgroundColor)
-
+        // check is all blocks have a value
         if (colors.includes('')) {
             document.getElementById('error_message').innerHTML = 'Please fill in all boxes with colors'
             return;
         }
 
+        // Create a call to python the gather results from this color combination
         $.ajax({
             url: "{% url 'check_colors' ronde=6789 ai_comb=ai_combination colors=12345 %}".replace(/12345/, colors).replace(/6789/, round),
         }).done(function (data) {
             console.log(data)
             if (data['isGameCompleted'] === false) {
+                // reset counters
                 feedback_colorless_block_focus = 1
                 updateRoundCounter()
-
+                // set colors in de feedback blocks
                 setFeedbackColors(data['rcp'], data['rcwp'])
-
+                // create a new empty row
                 loadNewRow(clones[clones.length - 1].cloneNode(true))
             } else {
+                // show message when game is done
                 showGameDoneOptions(data['gamestatusText'])
+                // set logic if user won or not
                 if (data['isWon'] === false) {
                     document.getElementById('containerAiCode').style.display = 'flex'
                     var ai_code = {{ ai_combination|safe }}
@@ -167,11 +178,13 @@
         });
     }
 
+    // update rounds
     function updateRoundCounter() {
         round++;
         document.getElementById('round').innerHTML = round
     }
 
+    // set feedbackl colors
     function setFeedbackColors(rcp, rcwp) {
         for (let i = 0; i < rcp; i++) {
             clones[clones.length - 1].childNodes[1].childNodes[feedback_colorless_block_focus].style.backgroundColor = 'white'
@@ -184,6 +197,7 @@
         }
     }
 
+    // set html gamedone container
     function showGameDoneOptions(gamestatusText) {
         document.getElementById("containerGameDoneContent").style.display = 'inline'
         document.getElementById('containerGameScreen').style.opacity = '10%'
@@ -196,24 +210,28 @@
         }, "slow");
 
     }
-
+    // logic to load new row
     function loadNewRow(node) {
+        // enable display in css
         node.style.display = ''
+        // add to list
         clones.push(node)
-
+        // reset counter
         colorless_block_focus = 1
         feedback_colorless_block_focus = 1
         spancounter = 1
 
         updateSpanCounter()
-
+        // clear colors because it is copied from previous
         resetBackgroundColorsNewNode()
-
+        // append to parentcontainer
         document.getElementById('containerBoard').appendChild(node)
         document.getElementById('containerBoard').appendChild(document.createElement("hr"))
     }
 
+    // logic to reset colors from copied row
     function resetBackgroundColorsNewNode() {
+        // iteratie through list en set background color to '' which is nothing
         for (let i = 1; i < 8; i++) {
             try {
                 clones[clones.length - 1].childNodes[1].childNodes[i].style.backgroundColor = ''

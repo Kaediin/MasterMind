@@ -82,15 +82,15 @@ def submit_feedback(request, round, colors, previous_code, alg_type):
         # if the game is not over, check to see which algorithm should be used
         if alg_type == 'simple':
             print('Simple')
-            ai_code = get_ai_code(0, request, user_code, previous_code)
+            ai_code = get_ai_code(0, request, user_code, previous_code, round)
 
         elif alg_type == 'worst-case':
             print('Worst-case')
-            ai_code = get_ai_code(1, request, user_code, previous_code)
+            ai_code = get_ai_code(1, request, user_code, previous_code, round)
 
         else:
             print('Cliffhanger')
-            ai_code = get_ai_code(2, request, user_code, previous_code)
+            ai_code = get_ai_code(2, request, user_code, previous_code, round)
 
         print(f'Returning new code to temlate: {ai_code}')
         result = mastermind_utils.get_response_from_code(user_code, ai_code)
@@ -153,7 +153,7 @@ def check_colors(request, ronde, ai_comb, colors):
 
 
 # little function to return the ai code in the gamemode ai vs player
-def get_ai_code(alg_type, request, user_code, previous_code):
+def get_ai_code(alg_type, request, user_code, previous_code, round):
     if alg_type == 0:
         # SIMPLE
 
@@ -181,7 +181,7 @@ def get_ai_code(alg_type, request, user_code, previous_code):
         ai_code = knuth_list.pop(0)
         request.session['knuth_list'] = knuth_list
         return ai_code
-    else:
+    elif alg_type == 2:
         # CLIFFHANGER
         # This algorithm which I though of myself always uses all the gameround. It is designed to make the user think it has won
         # and right when the last round is upon the user the algoprithm pulls out the right guess!
@@ -189,6 +189,7 @@ def get_ai_code(alg_type, request, user_code, previous_code):
             # get list from session
             codes = request.session['cliffhanger_codes']
             if len(codes) == 0 or round == 1:
+                print('raising error')
                 # if this is a new game we cant use a list from an older session we raise an error to create a new list
                 raise KeyError
         except KeyError:
