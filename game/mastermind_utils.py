@@ -263,6 +263,10 @@ def cliffhanger_strategy(user_code, guess):
         result = get_response_from_code(user_code, guess)
         rcp = result['rcp']
 
+    # remove original guess from list to prevent duplicates
+    if org_guess in guesses:
+        guesses.remove(org_guess)
+
     # get some results that kindoff fit in but dont have a score of (4, 0).
     # It is VERY unlikely the score will be (4,0) on the ones added
     res = get_response_from_code(get_random_pin_combination(), org_guess)
