@@ -52,12 +52,23 @@
     </div>
 
 
-    <h2>AI Code:</h2>
+    <h2 id="ai_guess_title">AI Code:</h2>
     <div id="containerAiGuess">
         <div id="containerAiGuessSlot1"></div>
         <div id="containerAiGuessSlot2"></div>
         <div id="containerAiGuessSlot3"></div>
         <div id="containerAiGuessSlot4"></div>
+    </div>
+
+    <div class="lds-roller" id="lds-roller">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
     </div>
 
     <div id="containerPallet">
@@ -149,6 +160,9 @@
                 }
             }
         }
+
+        document.getElementById('lds-roller').style.display = 'inline-block'
+
         $.ajax({
             url: "{% url 'submit_feedback' previous_code='abcd' round=123 colors=456 alg_type='def' %}".replace('def', alg_type).replace(/123/, round).replace('abcd', new_ai_code).replace(/456/, colors),
         }).done(function (data) {
@@ -165,6 +179,7 @@
             } else {
                 showGameDoneOptions(data['gamestatusText'])
             }
+            document.getElementById('lds-roller').style.display = 'none'
         });
 
     }

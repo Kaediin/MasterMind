@@ -40,14 +40,14 @@ body {
 
 #containerBoard {
     padding: 50px 100px 50px 100px;
-    height: 65vh;
+    height: 60vh;
     overflow-y: scroll;
 }
 
 .containerRow {
     display: grid;
     grid: "containerLeft containerMiddle containerRight"1fr/
-    1fr 5fr 1fr;
+    200px 5fr 1fr;
 }
 
 .containerLeft {
@@ -78,7 +78,7 @@ body {
 .leftSlot {
     width: 50px;
     height: 50px;
-    flex: 1 0 34%;
+    /*flex: 1 0 34%;*/
 }
 
 .centreSlot {
@@ -93,7 +93,7 @@ div#containerPallet {
     width: 100%;
     align-items: center;
     position: fixed;
-    bottom: 50px;
+    bottom: 10px;
 }
 
 div#containerPalletColors {
@@ -112,8 +112,8 @@ hr {
 }
 
 .pallet_colors {
-    width: 100px;
-    height: 100px;
+    width: 75px;
+    height: 75px;
     cursor: pointer;
 }
 
